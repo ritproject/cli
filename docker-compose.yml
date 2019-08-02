@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+  cli:
+    image: registry.gitlab.com/ritproject/cli:development
+    build:
+      context: app
+      dockerfile: ../docker/development/${DOCKERFILE:-Dockerfile}
+    volumes:
+      - ./app/lib:/app/lib
+      - ./app/test:/app/test
+      - ./app/.formatter.exs:/app/.formatter.exs
+      - ./app/mix.exs:/app/mix.exs
+      - ./app/mix.lock:/app/mix.lock

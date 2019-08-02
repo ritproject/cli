@@ -1,0 +1,21 @@
+version: '3.7'
+
+x-test: &test
+  image: registry.gitlab.com/ritproject/cli:test
+  volumes:
+    - ./app/lib:/app/lib
+    - ./app/test:/app/test
+    - ./app/.formatter.exs:/app/.formatter.exs
+    - ./app/mix.exs:/app/mix.exs
+    - ./app/mix.lock:/app/mix.lock
+
+services:
+  cli:
+    <<: *test
+    build:
+      context: app
+      dockerfile: ../docker/test/${DOCKERFILE:-Dockerfile}
+
+  cli.lint:
+    <<: *test
+    command: mix credo list --strict --all

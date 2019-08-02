@@ -1,0 +1,134 @@
+image: uplugbr/cicd:3.7
+services:
+  - docker:dind
+stages:
+  - test
+  - push project images
+  - push production images
+before_script:
+  - docker login registry.gitlab.com --username gitlab-ci-token --password $CI_BUILD_TOKEN
+
+# Stage: test
+test:
+  stage: test
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+  script: docker-compose -f docker-compose.test.yml run cli.ci
+  tags:
+    - docker
+
+test code quality:
+  stage: test
+  script:
+    - docker-compose -f docker-compose.test.yml pull --quiet cli.lint
+    - docker-compose -f docker-compose.test.yml run cli.lint
+
+# Stage: push project images
+push development image:
+  stage: push project images
+  script:
+    - docker-compose build
+    - docker-compose push
+  only:
+    - /^master$/
+  tags:
+    - docker
+
+push test image:
+  stage: push project images
+  script:
+    - docker-compose -f docker-compose.test.yml build cli
+    - docker-compose -f docker-compose.test.yml push cli
+  only:
+    - /^master$/
+  tags:
+    - docker
+
+push alpine release image:
+  stage: push project images
+  script:
+    - docker-compose -f docker-compose.production.yml build alpine_release
+    - docker-compose -f docker-compose.production.yml push alpine_release
+  only:
+    - /^master$/
+  tags:
+    - docker
+
+# Stage: push production images
+push unstable image:
+  stage: push production images
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+    IMAGE_TAG: unstable
+  script:
+    - docker-compose -f docker-compose.production.yml build
+    - docker-compose -f docker-compose.production.yml push cli
+  environment:
+    name: unstable
+  only:
+    - /^develop$/
+  tags:
+    - docker
+
+push staging image:
+  stage: push production images
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+    IMAGE_TAG: staging
+  script:
+    - docker-compose -f docker-compose.production.yml build
+    - docker-compose -f docker-compose.production.yml push cli
+  environment:
+    name: staging
+  only:
+    - /^staging$/
+  tags:
+    - docker
+
+push production image:
+  stage: push production images
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+    IMAGE_TAG: production
+  script:
+    - docker-compose -f docker-compose.production.yml build
+    - docker-compose -f docker-compose.production.yml push cli
+  environment:
+    name: production
+  only:
+    - /^master$/
+  tags:
+    - docker
+
+push latest image:
+  stage: push production images
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+    IMAGE_TAG: latest
+  script:
+    - docker-compose -f docker-compose.production.yml build
+    - docker-compose -f docker-compose.production.yml push cli
+  environment:
+    name: latest
+  only:
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /--update-latest/
+  except:
+    - /^((?!master).)*$/
+  tags:
+    - docker
+
+push tagged image:
+  stage: push production images
+  variables:
+    DOCKERFILE: recursive/Dockerfile
+    IMAGE_TAG: $CI_COMMIT_TAG
+  script:
+    - docker-compose -f docker-compose.production.yml build
+    - docker-compose -f docker-compose.production.yml push cli
+  environment:
+    name: $CI_COMMIT_TAG
+  only:
+    - tags
+  tags:
+    - docker

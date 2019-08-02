@@ -1,0 +1,24 @@
+defmodule Rit.CLI.Input do
+  @moduledoc false
+
+  alias Rit.CLI.Input
+
+  defstruct context: :help,
+            argv: []
+
+  @context_map %{
+    "g" => :git,
+    "git" => :git
+  }
+
+  def create_input_data([]) do
+    {:ok, %Input{}}
+  end
+
+  def create_input_data([context | argv]) do
+    case Map.get(@context_map, Recase.to_snake(context)) do
+      context when not is_nil(context) -> {:ok, %Input{context: context, argv: argv}}
+      _nil -> {:error, :unknown_context, context}
+    end
+  end
+end

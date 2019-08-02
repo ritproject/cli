@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  alpine_release:
+    image: registry.gitlab.com/ritproject/cli:alpine-release
+    build:
+      context: app
+      dockerfile: ../docker/production/alpine/${DOCKERFILE:-Dockerfile}
+
+  cli:
+    image: registry.gitlab.com/ritproject/cli:${IMAGE_TAG:-latest}
+    build:
+      context: app
+      dockerfile: ../docker/production/Dockerfile
+    depends_on:
+      - alpine_release

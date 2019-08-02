@@ -1,7 +1,7 @@
 defmodule Rit.CLI do
   @moduledoc false
 
-  alias Rit.CLI.Input
+  alias Rit.CLI.{Helper, Input}
   alias Rit.Git
 
   def handle_input(argv \\ []) do
@@ -14,6 +14,7 @@ defmodule Rit.CLI do
   defp redirect_to_context(%Input{context: context} = input) do
     case context do
       :git -> Git.handle_input(input)
+      _ -> Helper.handle_input(input)
     end
   end
 end

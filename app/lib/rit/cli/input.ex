@@ -3,12 +3,14 @@ defmodule Rit.CLI.Input do
 
   alias Rit.CLI.Input
 
-  defstruct context: :help,
+  defstruct context: :unknown,
             argv: []
 
   @context_map %{
     "g" => :git,
-    "git" => :git
+    "git" => :git,
+    "h" => :help,
+    "help" => :help
   }
 
   def create_input_data([]) do

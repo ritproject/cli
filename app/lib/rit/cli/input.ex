@@ -7,6 +7,10 @@ defmodule Rit.CLI.Input do
             argv: []
 
   @context_map %{
+    "a" => :auth,
+    "auth" => :auth,
+    "c" => :config,
+    "config" => :config,
     "g" => :git,
     "git" => :git,
     "h" => :help,

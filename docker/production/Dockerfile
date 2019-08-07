@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/ritproject/cli:alpine-release AS build
+FROM registry.gitlab.com/ritproject/cli:alpine AS build
 FROM erlang:22-alpine
 
 RUN apk add git

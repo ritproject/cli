@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/ritproject/cli:alpine-release
+FROM registry.gitlab.com/ritproject/cli:alpine
 
 COPY lib lib
 COPY mix.exs mix.lock ./

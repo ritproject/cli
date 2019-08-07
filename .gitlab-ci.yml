@@ -1,4 +1,4 @@
-image: uplugbr/cicd:3.7
+image: registry.gitlab.com/ritproject/ci-cd:stable
 services:
   - docker:dind
 stages:
@@ -20,8 +20,8 @@ test:
 test code quality:
   stage: test
   script:
-    - docker-compose -f docker-compose.test.yml pull --quiet cli.lint
-    - docker-compose -f docker-compose.test.yml run cli.lint
+    - docker-compose -f docker-compose.test.yml pull --quiet cli.static
+    - docker-compose -f docker-compose.test.yml run cli.static
 
 # Stage: push project images
 push development image:
@@ -54,22 +54,6 @@ push alpine release image:
   tags:
     - docker
 
-# Stage: push production images
-push unstable image:
-  stage: push production images
-  variables:
-    DOCKERFILE: recursive/Dockerfile
-    IMAGE_TAG: unstable
-  script:
-    - docker-compose -f docker-compose.production.yml build
-    - docker-compose -f docker-compose.production.yml push cli
-  environment:
-    name: unstable
-  only:
-    - /^develop$/
-  tags:
-    - docker
-
 push staging image:
   stage: push production images
   variables:
@@ -89,7 +73,6 @@ push production image:
   stage: push production images
   variables:
     DOCKERFILE: recursive/Dockerfile
-    IMAGE_TAG: production
   script:
     - docker-compose -f docker-compose.production.yml build
     - docker-compose -f docker-compose.production.yml push cli
@@ -97,24 +80,6 @@ push production image:
     name: production
   only:
     - /^master$/
-  tags:
-    - docker
-
-push latest image:
-  stage: push production images
-  variables:
-    DOCKERFILE: recursive/Dockerfile
-    IMAGE_TAG: latest
-  script:
-    - docker-compose -f docker-compose.production.yml build
-    - docker-compose -f docker-compose.production.yml push cli
-  environment:
-    name: latest
-  only:
-    variables:
-      - $CI_COMMIT_MESSAGE =~ /--update-latest/
-  except:
-    - /^((?!master).)*$/
   tags:
     - docker
 

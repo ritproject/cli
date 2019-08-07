@@ -12,4 +12,4 @@ COPY mix.exs mix.lock ./
 RUN mix deps.get && \
     mix deps.compile
 
-CMD [ "mix", "coveralls" ]
+CMD [ "mix", "test.coverage" ]

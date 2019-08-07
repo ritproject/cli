@@ -7,7 +7,9 @@ defmodule RitTest do
   usage: rit <context> [arguments]
 
   Available contexts:
-    g, git    Use your local Git CLI application
+    a, auth      Perform authentication operations to a RitServer
+    c, config    Configuration operations
+    g, git       Use your 'git' command
 
   """
 
@@ -61,7 +63,7 @@ defmodule RitTest do
         assert catch_exit(Rit.main(["git", nil])) == {:shutdown, 1}
       end
 
-      assert capture_io(execution) == "Error Git Failed To Run \n"
+      assert capture_io(execution) == "error - git_failed_to_run - \n"
     end
 
     test "Fails gracefully if has an unknown argument as context" do
@@ -69,7 +71,7 @@ defmodule RitTest do
         assert catch_exit(Rit.main(["unknown"])) == {:shutdown, 1}
       end
 
-      assert capture_io(execution) == "Error Unknown Context unknown\n"
+      assert capture_io(execution) == "error - unknown_context - unknown\n"
     end
   end
 end

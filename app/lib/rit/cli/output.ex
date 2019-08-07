@@ -12,7 +12,7 @@ defmodule Rit.CLI.Output do
   end
 
   def parse(informations) when is_list(informations) do
-    Enum.map_join(informations, " ", &parse/1)
+    Enum.map_join(informations, " - ", &parse/1)
   end
 
   def parse(information) when is_tuple(information) do
@@ -26,6 +26,9 @@ defmodule Rit.CLI.Output do
   def parse(information) when is_atom(information) do
     information
     |> Atom.to_string()
-    |> Recase.to_title()
+  end
+
+  def parse(information) do
+    inspect(information, pretty: true)
   end
 end

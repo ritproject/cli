@@ -16,6 +16,6 @@ services:
       context: app
       dockerfile: ../docker/test/${DOCKERFILE:-Dockerfile}
 
-  cli.lint:
+  cli.static:
     <<: *test
-    command: mix credo list --strict --all
+    command: mix test.static

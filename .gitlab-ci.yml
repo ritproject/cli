@@ -47,11 +47,11 @@ push test image:
     - docker-compose -f docker-compose.test.yml build cli
     - docker-compose -f docker-compose.test.yml push cli
 
-push alpine release image:
+push alpine image:
   <<: *push_project_image
   script:
-    - docker-compose -f docker-compose.production.yml build alpine_release
-    - docker-compose -f docker-compose.production.yml push alpine_release
+    - docker-compose -f docker-compose.production.yml build alpine
+    - docker-compose -f docker-compose.production.yml push alpine
 
 # Stage: push production images
 

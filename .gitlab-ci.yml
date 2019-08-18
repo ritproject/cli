@@ -57,6 +57,8 @@ push alpine image:
 
 .push_production_image: &push_production_image
   stage: push production images
+  before_script:
+    - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
   script:
     - docker-compose -f docker-compose.production.yml build
     - docker-compose -f docker-compose.production.yml push cli

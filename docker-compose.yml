@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   cli:
-    image: registry.gitlab.com/ritproject/cli:development
+    image: ritproject/internal-cli:development
     build:
       context: app
       dockerfile: ../docker/development/${DOCKERFILE:-Dockerfile}

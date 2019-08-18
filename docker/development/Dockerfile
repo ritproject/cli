@@ -1,13 +1,8 @@
-FROM elixir:1.9
-
-WORKDIR /app
-
-RUN mix local.hex --force && \
-    mix local.rebar --force
+FROM arkye/elixir
 
 COPY mix.exs mix.lock ./
 
 RUN mix deps.get && \
     mix deps.compile
 
-CMD [ "bash" ]
+CMD [ "sleep", "infinity" ]

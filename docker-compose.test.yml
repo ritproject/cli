@@ -1,7 +1,7 @@
 version: '3.7'
 
 x-test: &test
-  image: registry.gitlab.com/ritproject/cli:test
+  image: ritproject/internal-cli:test
   volumes:
     - ./app/lib:/app/lib
     - ./app/test:/app/test

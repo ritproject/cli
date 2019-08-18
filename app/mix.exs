@@ -1,9 +1,9 @@
-defmodule Rit.MixProject do
+defmodule RitCLI.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :rit,
+      app: :rit_cli,
       version: "0.0.1",
       elixir: "~> 1.9",
       escript: escript(),
@@ -23,7 +23,7 @@ defmodule Rit.MixProject do
 
   def escript do
     [
-      main_module: Rit
+      main_module: RitCLI
     ]
   end
 
@@ -38,7 +38,7 @@ defmodule Rit.MixProject do
   defp deps do
     [
       {:credo, "~> 1.1.2", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.11.1", only: :test},
+      {:excoveralls, "~> 0.11.1", only: [:dev, :test]},
       {:jason, "~> 1.1.2"},
       {:neuron, "~> 2.0.0"},
       {:recase, "~> 0.6.0"}

@@ -1,11 +1,6 @@
-FROM elixir:1.9
+FROM arkye/elixir
 
 ENV MIX_ENV=test
-
-WORKDIR /app
-
-RUN mix local.hex --force && \
-    mix local.rebar --force
 
 COPY mix.exs mix.lock ./
 

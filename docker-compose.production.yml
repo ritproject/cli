@@ -2,13 +2,13 @@ version: '3.7'
 
 services:
   alpine:
-    image: registry.gitlab.com/ritproject/cli:alpine
+    image: ritproject/internal-cli:alpine
     build:
       context: app
       dockerfile: ../docker/production/alpine/${DOCKERFILE:-Dockerfile}
 
   cli:
-    image: registry.gitlab.com/ritproject/cli:${IMAGE_TAG:-latest}
+    image: ritproject/cli:${IMAGE_TAG:-latest}
     build:
       context: app
       dockerfile: ../docker/production/Dockerfile

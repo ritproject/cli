@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/ritproject/cli:test
+FROM ritproject/internal-cli:test
 
 COPY mix.exs mix.lock ./
 

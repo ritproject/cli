@@ -48,7 +48,7 @@ defmodule RitCLI.CLI.Tunnel.Manager.Fetcher do
     if File.exists?(reference) do
       path = tunnel_path <> "/" <> name
 
-      File.rmdir(path)
+      File.rm_rf!(path)
       File.mkdir_p!(path)
 
       File.cp_r!(reference, path)

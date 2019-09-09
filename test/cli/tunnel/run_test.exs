@@ -421,7 +421,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
 
         run:
           link_mode: symlink
-          link_dir: ../test
+          link_dir: unknown/directory/path
 
           .test:
             redirect:
@@ -585,11 +585,14 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
           link_dir: link
 
           .test:
+            environment:
+              VALID: hello
+
             run: echo TEST
 
             .list:
-              - echo TEST
-              - echo TEST
+              - echo $TEST
+              - echo $VALID
               - unknown command
               - echo TEST
         """

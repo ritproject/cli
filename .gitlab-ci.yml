@@ -3,7 +3,6 @@ services:
   - docker:dind
 variables:
   DOCKER_HOST: tcp://docker:2375
-  DOCKER_DRIVER: overlay2
 stages:
   - test
   - update internal images
@@ -23,6 +22,7 @@ test:
 
 .update_internal_image: &update_internal_image
   stage: update internal images
+  before_script: docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
   only:
     - /^master$/
   tags:

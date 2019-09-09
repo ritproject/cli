@@ -186,7 +186,7 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
   defp execute(operation, %Runner{environment: environment, path: path} = runner) do
     if runner.link_dir != "" do
       tunnel_path = Path.expand(runner.link_dir, path)
-      File.rm(tunnel_path)
+      File.rm_rf(tunnel_path)
       perform_link!(runner, tunnel_path)
 
       case operation do
@@ -217,8 +217,12 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
   end
 
   defp execute_operation(operation, environment, path) do
+    [command | arguments] =
+      operation
+      |> interpolate_envs(environment)
+      |> String.split(" ", trim: true)
+
     environment = Enum.map(environment, fn {key, value} -> {key, value} end)
-    [command | arguments] = String.split(operation, " ")
 
     {result, code} =
       File.cd!(path, fn ->
@@ -234,6 +238,15 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
     end
   rescue
     _error -> Error.build_error(@id, :operation_failed, code: 1, operation: operation)
+  end
+
+  defp interpolate_envs(operation, environment) do
+    Regex.replace(~r/\$[{]*(\w+)[}]*/, operation, fn _match, env ->
+      case Map.get(environment, env) do
+        nil -> System.get_env(env, "")
+        env -> env
+      end
+    end)
   end
 
   defp execute_and_continue(operation, %Runner{} = runner, {prefixes, settings, args}) do

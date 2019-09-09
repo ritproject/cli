@@ -420,6 +420,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
         version: '0.0.1'
 
         run:
+          link_mode: symlink
           link_dir: ../test
 
           .test:
@@ -445,7 +446,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to create symbolic link
+      Error: Tunnel failed to link directory
 
       """
 
@@ -540,6 +541,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
         version: '0.0.1'
 
         run:
+          link_mode: copy
           link_dir: link
 
           .test:

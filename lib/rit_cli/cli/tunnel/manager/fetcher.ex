@@ -65,7 +65,9 @@ defmodule RitCLI.CLI.Tunnel.Manager.Fetcher do
     path = "#{tunnel_path}/#{name}"
 
     case fetch_from_repo(reference, path) do
-      {:ok, _result, 0} -> {:ok, path}
+      {:ok, _result, 0} ->
+        {:ok, path}
+
       _error ->
         File.rm_rf(path)
         Error.build_error(@id, :repo_fetch_failed, name: name, link: reference)

@@ -27,8 +27,8 @@ defmodule RitCLI.CLI.Error do
   Tunnel failed to identify 'link_dir' on settings
   """
 
-  @tunnel_runner_ln_s_failed """
-  Tunnel failed to create symbolic link
+  @tunnel_runner_link_failed """
+  Tunnel failed to link directory
   """
 
   @tunnel_runner_operation_failed """
@@ -61,7 +61,7 @@ defmodule RitCLI.CLI.Error do
     },
     tunnel_runner: %{
       link_dir_undefined: @tunnel_runner_link_dir_undefined,
-      ln_s_failed: @tunnel_runner_ln_s_failed,
+      link_failed: @tunnel_runner_link_failed,
       operation_failed: @tunnel_runner_operation_failed,
       operation_undefined: @tunnel_runner_operation_undefined,
       root_run_undefined: @tunnel_runner_root_run_undefined

@@ -57,7 +57,8 @@ defmodule RitCLI.CLI.Config.Tunnel.Input.Edit do
            Input.Validator.optional(input, :reference, &Validator.validate_reference/2, optionals),
          {:ok, input, optionals} <-
            Input.Validator.optional(input, :name, &Validator.validate_name/2, optionals),
-         :ok <- Input.Validator.validate_at_least_one_optional(optionals, [:from, :name, :reference]) do
+         :ok <-
+           Input.Validator.validate_at_least_one_optional(optionals, [:from, :name, :reference]) do
       {:ok, input}
     else
       {:error, error} ->

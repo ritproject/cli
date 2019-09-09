@@ -14,6 +14,7 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
             arguments: [],
             operation: nil,
             link_dir: "",
+            link_mode: :copy,
             environment: %{},
             strict?: false
 
@@ -38,6 +39,7 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
   defp update_parameters(%Runner{} = runner) do
     runner
     |> maybe_update_link_dir()
+    |> maybe_update_link_mode()
     |> maybe_update_environment()
   end
 
@@ -46,6 +48,18 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
       case Map.get(settings, "link_dir") do
         nil -> runner
         link_dir -> struct(runner, link_dir: link_dir)
+      end
+    else
+      runner
+    end
+  end
+
+  defp maybe_update_link_mode(%Runner{settings: settings} = runner) do
+    if is_map(settings) do
+      case Map.get(settings, "link_mode") do
+        "copy" -> struct(runner, link_mode: :copy)
+        "symlink" -> struct(runner, link_mode: :symlink)
+        _unknown -> runner
       end
     else
       runner
@@ -169,32 +183,37 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
     end
   end
 
-  defp execute(operation, %Runner{link_dir: link_dir, environment: environment, path: path}) do
-    if link_dir != "" do
-      tunnel_path = Path.expand(link_dir, path)
+  defp execute(operation, %Runner{environment: environment, path: path} = runner) do
+    if runner.link_dir != "" do
+      tunnel_path = Path.expand(runner.link_dir, path)
       File.rm(tunnel_path)
+      perform_link!(runner, tunnel_path)
 
-      case File.ln_s(Path.expand("."), tunnel_path) do
-        :ok ->
-          case operation do
-            operation when is_binary(operation) ->
-              execute_operation(operation, environment, path)
+      case operation do
+        operation when is_binary(operation) ->
+          execute_operation(operation, environment, path)
 
-            operations when is_list(operations) ->
-              Enum.reduce_while(operations, :ok, fn operation, _result ->
-                case execute_operation(operation, environment, path) do
-                  :ok -> {:cont, :ok}
-                  error -> {:halt, error}
-                end
-              end)
-          end
-
-        _error ->
-          Error.build_error(@id, :ln_s_failed)
+        operations when is_list(operations) ->
+          Enum.reduce_while(operations, :ok, fn operation, _result ->
+            case execute_operation(operation, environment, path) do
+              :ok -> {:cont, :ok}
+              error -> {:halt, error}
+            end
+          end)
       end
     else
       Error.build_error(@id, :link_dir_undefined)
     end
+  rescue
+    _error -> Error.build_error(@id, :link_failed)
+  end
+
+  defp perform_link!(%Runner{link_mode: :symlink}, tunnel_path) do
+    File.ln_s!(Path.expand("."), tunnel_path)
+  end
+
+  defp perform_link!(%Runner{link_mode: :copy}, tunnel_path) do
+    File.cp_r!(Path.expand("."), tunnel_path)
   end
 
   defp execute_operation(operation, environment, path) do

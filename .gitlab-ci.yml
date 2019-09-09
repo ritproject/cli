@@ -22,7 +22,8 @@ test:
 
 .update_internal_image: &update_internal_image
   stage: update internal images
-  before_script: docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
+  before_script:
+    - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
   only:
     - /^master$/
   tags:

@@ -4,14 +4,14 @@ services:
 stages:
   - test
   - update internal images
-before_script:
-  - rit config tunnel add repo https://gitlab.com/ritproject/workspace
-  - rit config tunnel default set workspace
 
 # Stage: test
 
 test:
   stage: test
+  before_script:
+    - rit config tunnel add repo https://gitlab.com/ritproject/workspace
+    - rit config tunnel default set workspace
   script: rit tunnel run cli test
   tags:
     - docker
@@ -22,6 +22,8 @@ test:
   stage: update internal images
   before_script:
     - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
+    - rit config tunnel add repo https://gitlab.com/ritproject/workspace
+    - rit config tunnel default set workspace
   only:
     - /^master$/
   tags:
@@ -35,6 +37,6 @@ update test image:
   <<: *update_internal_image
   script: rit tunnel run cli update test
 
-update release image:
+update docker image:
   <<: *update_internal_image
-  script: rit tunnel run cli update release
+  script: rit tunnel run cli update docker

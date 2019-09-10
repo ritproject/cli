@@ -1,7 +1,7 @@
 defmodule RitCLI.CLI.Input.Validator do
   @moduledoc false
 
-  @hostname_regex ~r/^http(s)*:\/\/[a-zA-Z0-9][a-zA-Z0-9\.\/\-\_]+[a-zA-Z-0-9]$/
+  @hostname_regex ~r/^http(s)*:\/\/[a-zA-Z0-9][a-zA-Z0-9\.\/\-\_@:]+[a-zA-Z-0-9]$/
   @hostname_error "must be a valid hostname, with http or https prefix and no trailing slash"
 
   @spec validate_hostname(String.t(), atom | String.t()) :: :ok | {:error, atom, Output.t()}

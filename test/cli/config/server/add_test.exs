@@ -29,7 +29,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: Unknown config server add arguments: ''
+      \e[31mError\e[0m: Unknown config server add arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -81,7 +81,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: Unknown config server add arguments: 'test'
+      \e[31mError\e[0m: Unknown config server add arguments: 'test'
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -94,7 +94,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: <name> argument with value 't' must have at least 2 and at most 20 characters
+      \e[31mError\e[0m: <name> argument with value 't' must have at least 2 and at most 20 characters
       """
 
       assert capture_io(execution) == error_message
@@ -107,7 +107,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: <name> argument with value 't2' must start and finish with a letter and must contain only letters and underscore
+      \e[31mError\e[0m: <name> argument with value 't2' must start and finish with a letter and must contain only letters and underscore
       """
 
       assert capture_io(execution) == error_message
@@ -129,7 +129,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: Server 'test' already exists
+      \e[31mError\e[0m: Server 'test' already exists
       """
 
       assert capture_io(execution) == error_message
@@ -144,7 +144,7 @@ defmodule RitCLITest.CLI.Config.Server.AddTest do
       end
 
       error_message = """
-      Error: Unknown config server add arguments: ''
+      \e[31mError\e[0m: Unknown config server add arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

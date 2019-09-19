@@ -28,7 +28,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel default set arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel default set arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -96,7 +96,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
       end
 
       error_message = """
-      Error: Tunnel 'test' not found
+      \e[31mError\e[0m: Tunnel 'test' not found
       """
 
       assert capture_io(execution) == error_message
@@ -109,7 +109,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
       end
 
       error_message = """
-      Error: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
+      \e[31mError\e[0m: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
       """
 
       assert capture_io(execution) == error_message
@@ -122,7 +122,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
       end
 
       error_message = """
-      Error: <path> argument with value '/unknown_folder' must be a valid path
+      \e[31mError\e[0m: <path> argument with value '/unknown_folder' must be a valid path
       """
 
       assert capture_io(execution) == error_message
@@ -137,7 +137,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel default set arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel default set arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

@@ -86,23 +86,16 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
 
       message = """
       b
-
-      Tunnelling successfully performed
+      \e[32mTunnelling successfully performed\e[0m
       c
-
       c2
-
-      Tunnelling successfully performed
+      \e[32mTunnelling successfully performed\e[0m
       d
-
       e
-
       e2
-
-      Tunnelling successfully performed
+      \e[32mTunnelling successfully performed\e[0m
       /bin/cat: unknown.txt: No such file or directory
-
-      Error: Tunnel operation 'cat unknown.txt' failed, exit code: 1
+      \e[31mError\e[0m: Tunnel operation 'cat unknown.txt' failed, exit code: 1
 
       """
 
@@ -156,8 +149,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
 
       message = """
       test
-
-      Tunnelling successfully performed
+      \e[32mTunnelling successfully performed\e[0m
       """
 
       assert capture_io(execution) == message
@@ -172,7 +164,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to find default config
+      \e[31mError\e[0m: Tunnel failed to find default config
 
       """
 
@@ -198,7 +190,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to find config with name 'test'
+      \e[31mError\e[0m: Tunnel failed to find config with name 'test'
 
       """
 
@@ -224,7 +216,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel local reference 'test' on path '/test' does not exist
+      \e[31mError\e[0m: Tunnel local reference 'test' on path '/test' does not exist
 
       """
 
@@ -249,7 +241,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
+      \e[31mError\e[0m: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
 
       """
 
@@ -275,7 +267,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
+      \e[31mError\e[0m: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
 
       """
 
@@ -300,7 +292,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed find tunnel YAML file
+      \e[31mError\e[0m: Tunnel failed find tunnel YAML file
 
       """
 
@@ -329,7 +321,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to parse YAML file
+      \e[31mError\e[0m: Tunnel failed to parse YAML file
 
       """
 
@@ -363,7 +355,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to identify run on settings
+      \e[31mError\e[0m: Tunnel failed to identify run on settings
 
       """
 
@@ -402,7 +394,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to identify operation to perform on settings
+      \e[31mError\e[0m: Tunnel failed to identify operation to perform on settings
 
       """
 
@@ -446,7 +438,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to link directory
+      \e[31mError\e[0m: Tunnel failed to link directory
 
       """
 
@@ -485,7 +477,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to identify 'link_dir' on settings
+      \e[31mError\e[0m: Tunnel failed to identify 'link_dir' on settings
 
       """
 
@@ -523,7 +515,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel operation 'unknown command' failed, exit code: 1
+      \e[31mError\e[0m: Tunnel operation 'unknown command' failed, exit code: 1
 
       """
 
@@ -564,7 +556,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed to identify operation to perform on settings
+      \e[31mError\e[0m: Tunnel failed to identify operation to perform on settings
 
       """
 
@@ -613,7 +605,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel operation 'unknown command' failed, exit code: 1
+      \e[31mError\e[0m: Tunnel operation 'unknown command' failed, exit code: 1
 
       """
 
@@ -660,7 +652,7 @@ defmodule RitCLITest.CLI.Tunnel.RunTest do
       end
 
       error_message = """
-      Error: Tunnel failed find tunnel YAML file
+      \e[31mError\e[0m: Tunnel failed find tunnel YAML file
 
       """
 

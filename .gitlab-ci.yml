@@ -3,7 +3,7 @@ services:
   - docker:dind
 stages:
   - test
-  - update internal images
+  - update images
 
 # Stage: test
 
@@ -16,10 +16,10 @@ test:
   tags:
     - docker
 
-# Stage: update internal images
+# Stage: update images
 
-.update_internal_image: &update_internal_image
-  stage: update internal images
+.update_image: &update_image
+  stage: update images
   before_script:
     - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
     - rit config tunnel add repo https://gitlab.com/ritproject/workspace
@@ -30,13 +30,17 @@ test:
     - docker
 
 update development image:
-  <<: *update_internal_image
+  <<: *update_image
   script: rit tunnel run cli update development
 
 update test image:
-  <<: *update_internal_image
+  <<: *update_image
   script: rit tunnel run cli update test
 
 update docker image:
-  <<: *update_internal_image
+  <<: *update_image
   script: rit tunnel run cli update docker
+
+update production image:
+  <<: *update_image
+  script: rit tunnel run cli update production

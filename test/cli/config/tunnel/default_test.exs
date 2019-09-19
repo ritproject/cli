@@ -4,7 +4,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.DefaultTest do
   import ExUnit.CaptureIO
 
   @error_message """
-  Error: No config tunnel default operation defined
+  \e[31mError\e[0m: No config tunnel default operation defined
   """
 
   @helper_message """
@@ -44,7 +44,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.DefaultTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel default operation 'unknown'
+      \e[31mError\e[0m: Unknown config tunnel default operation 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message

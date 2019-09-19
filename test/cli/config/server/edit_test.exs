@@ -31,7 +31,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: Unknown config server edit arguments: ''
+      \e[31mError\e[0m: Unknown config server edit arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -44,7 +44,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: Unknown config server edit arguments: 'test --unknown option'
+      \e[31mError\e[0m: Unknown config server edit arguments: 'test --unknown option'
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -141,7 +141,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: expects at least one of the optional inputs: <name>, <hostname>, <port>
+      \e[31mError\e[0m: expects at least one of the optional inputs: <name>, <hostname>, <port>
       """
 
       assert capture_io(execution) == error_message
@@ -157,7 +157,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: <hostname> argument with value 'http://test.com/I-met-a-traveller-from-an-antique-land-Who-said-Two-vast-and-trunkless-legs-of-stone-Stand-in-the-desert-Near-them-on-the-sand-Half-sunk-a-shattered-visage-lies-whose-frown' must have at most 150 characters
+      \e[31mError\e[0m: <hostname> argument with value 'http://test.com/I-met-a-traveller-from-an-antique-land-Who-said-Two-vast-and-trunkless-legs-of-stone-Stand-in-the-desert-Near-them-on-the-sand-Half-sunk-a-shattered-visage-lies-whose-frown' must have at most 150 characters
       """
 
       assert capture_io(execution) == error_message
@@ -172,7 +172,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: <hostname> argument with value 'not.hostname' must be a valid hostname, with http or https prefix and no trailing slash
+      \e[31mError\e[0m: <hostname> argument with value 'not.hostname' must be a valid hostname, with http or https prefix and no trailing slash
       """
 
       assert capture_io(execution) == error_message
@@ -185,7 +185,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: <port> argument with value 'not_a_port' must be a number
+      \e[31mError\e[0m: <port> argument with value 'not_a_port' must be a number
       """
 
       assert capture_io(execution) == error_message
@@ -200,7 +200,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: Server 'test' not found
+      \e[31mError\e[0m: Server 'test' not found
       """
 
       assert capture_io(execution) == error_message
@@ -215,7 +215,7 @@ defmodule RitCLITest.CLI.Config.Server.EditTest do
       end
 
       error_message = """
-      Error: Unknown config server edit arguments: ''
+      \e[31mError\e[0m: Unknown config server edit arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

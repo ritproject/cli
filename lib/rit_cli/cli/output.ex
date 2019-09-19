@@ -5,7 +5,7 @@ defmodule RitCLI.CLI.Output do
 
   @type t :: %Output{
           error: String.t(),
-          message: String.t(),
+          message: String.t() | keyword,
           module_id: atom,
           show_module_helper?: boolean,
           code: integer
@@ -30,7 +30,7 @@ defmodule RitCLI.CLI.Output do
   end
 
   defp maybe_inform_error(%Output{error: error, code: code} = output) do
-    IO.puts("Error: #{error}")
+    IO.puts(IO.ANSI.red() <> "Error" <> IO.ANSI.reset() <> ": #{error}")
 
     if code != 0 do
       output
@@ -40,11 +40,25 @@ defmodule RitCLI.CLI.Output do
   end
 
   defp maybe_inform_message(%Output{message: message} = output) do
+    message =
+      case message do
+        message when is_list(message) -> decorate_message(message)
+        message -> message
+      end
+
     if message != "" do
       IO.puts(message)
     end
 
     output
+  end
+
+  defp decorate_message(message) do
+    Enum.reduce(message, "", &decorate_segment/2)
+  end
+
+  defp decorate_segment({:s, segment}, message) do
+    message <> IO.ANSI.green() <> segment <> IO.ANSI.reset()
   end
 
   defp maybe_inform_helper_message(%Output{show_module_helper?: false} = output) do

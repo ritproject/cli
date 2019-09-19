@@ -224,12 +224,14 @@ defmodule RitCLI.CLI.Tunnel.Manager.Runner do
 
     environment = Enum.map(environment, fn {key, value} -> {key, value} end)
 
-    {result, code} =
+    {_stream, code} =
       File.cd!(path, fn ->
-        System.cmd(command, arguments, env: environment, stderr_to_stdout: true)
+        System.cmd(command, arguments,
+          env: environment,
+          into: IO.stream(:stdio, :line),
+          stderr_to_stdout: true
+        )
       end)
-
-    Output.inform(%Output{message: result})
 
     if code == 0 do
       :ok

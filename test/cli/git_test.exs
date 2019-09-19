@@ -25,7 +25,7 @@ defmodule RitCLITest.CLI.GitTest do
         assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
       end
 
-      assert capture_io(execution) == "Error: " <> git_result <> "\n"
+      assert capture_io(execution) == "\e[31mError\e[0m: " <> git_result <> "\n"
     end
   end
 end

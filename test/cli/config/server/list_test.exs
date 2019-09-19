@@ -101,7 +101,7 @@ defmodule RitCLITest.CLI.Config.Server.ListTest do
       end
 
       error_message = """
-      Error: Unknown config server list arguments: 'unknown'
+      \e[31mError\e[0m: Unknown config server list arguments: 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message

@@ -4,7 +4,7 @@ defmodule RitCLITest.CLI.ConfigTest do
   import ExUnit.CaptureIO
 
   @error_message """
-  Error: No config context defined
+  \e[31mError\e[0m: No config context defined
   """
 
   @helper_message """
@@ -45,7 +45,7 @@ defmodule RitCLITest.CLI.ConfigTest do
       end
 
       error_message = """
-      Error: Unknown config context 'unknown'
+      \e[31mError\e[0m: Unknown config context 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message

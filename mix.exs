@@ -41,7 +41,9 @@ defmodule RitCLI.MixProject do
 
   defp escript do
     [
-      main_module: RitCLI
+      main_module: RitCLI,
+      name: "rit",
+      app: nil
     ]
   end
 

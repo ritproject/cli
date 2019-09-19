@@ -4,7 +4,7 @@ defmodule RitCLITest.CLI.TunnelTest do
   import ExUnit.CaptureIO
 
   @error_message """
-  Error: No tunnel context defined
+  \e[31mError\e[0m: No tunnel context defined
   """
 
   @helper_message """
@@ -44,7 +44,7 @@ defmodule RitCLITest.CLI.TunnelTest do
       end
 
       error_message = """
-      Error: Unknown tunnel context 'unknown'
+      \e[31mError\e[0m: Unknown tunnel context 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message

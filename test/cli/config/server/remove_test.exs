@@ -23,7 +23,7 @@ defmodule RitCLITest.CLI.Config.Server.RemoveTest do
       end
 
       error_message = """
-      Error: Unknown config server remove arguments: ''
+      \e[31mError\e[0m: Unknown config server remove arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -78,7 +78,7 @@ defmodule RitCLITest.CLI.Config.Server.RemoveTest do
       end
 
       error_message = """
-      Error: Server 'test' not found
+      \e[31mError\e[0m: Server 'test' not found
       """
 
       assert capture_io(execution) == error_message
@@ -93,7 +93,7 @@ defmodule RitCLITest.CLI.Config.Server.RemoveTest do
       end
 
       error_message = """
-      Error: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
+      \e[31mError\e[0m: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
       """
 
       assert capture_io(execution) == error_message
@@ -108,7 +108,7 @@ defmodule RitCLITest.CLI.Config.Server.RemoveTest do
       end
 
       error_message = """
-      Error: Unknown config server remove arguments: ''
+      \e[31mError\e[0m: Unknown config server remove arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

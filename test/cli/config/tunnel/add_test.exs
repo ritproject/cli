@@ -35,7 +35,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel add arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel add arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -102,7 +102,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel add arguments: 'repo'
+      \e[31mError\e[0m: Unknown config tunnel add arguments: 'repo'
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -115,7 +115,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
       end
 
       error_message = """
-      Error: <from> argument with value 'from' must be 'local' or 'repo'
+      \e[31mError\e[0m: <from> argument with value 'from' must be 'local' or 'repo'
       """
 
       assert capture_io(execution) == error_message
@@ -137,7 +137,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
       end
 
       error_message = """
-      Error: Tunnel 'test' already exists
+      \e[31mError\e[0m: Tunnel 'test' already exists
       """
 
       assert capture_io(execution) == error_message
@@ -152,7 +152,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel add arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel add arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

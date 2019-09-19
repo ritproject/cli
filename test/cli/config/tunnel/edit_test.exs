@@ -31,7 +31,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel edit arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel edit arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -44,7 +44,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel edit arguments: 'test --unknown option'
+      \e[31mError\e[0m: Unknown config tunnel edit arguments: 'test --unknown option'
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -119,7 +119,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
       end
 
       error_message = """
-      Error: expects at least one of the optional inputs: <from>, <name>, <reference>
+      \e[31mError\e[0m: expects at least one of the optional inputs: <from>, <name>, <reference>
       """
 
       assert capture_io(execution) == error_message
@@ -134,7 +134,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
       end
 
       error_message = """
-      Error: Tunnel 'test' not found
+      \e[31mError\e[0m: Tunnel 'test' not found
       """
 
       assert capture_io(execution) == error_message
@@ -149,7 +149,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel edit arguments: ''
+      \e[31mError\e[0m: Unknown config tunnel edit arguments: ''
       """
 
       assert capture_io(execution) == error_message <> @helper_message

@@ -82,7 +82,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.UnsetTest do
       end
 
       error_message = """
-      Error: <path> argument with value '/unknown_folder' must be a valid path
+      \e[31mError\e[0m: <path> argument with value '/unknown_folder' must be a valid path
       """
 
       assert capture_io(execution) == error_message
@@ -95,7 +95,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.UnsetTest do
       end
 
       error_message = """
-      Error: Unknown config tunnel default unset arguments: 'unknown'
+      \e[31mError\e[0m: Unknown config tunnel default unset arguments: 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message
@@ -112,7 +112,7 @@ defmodule RitCLITest.CLI.Config.Tunnel.Default.UnsetTest do
       end
 
       error_message = """
-      Error: There are no global default tunnel set
+      \e[31mError\e[0m: There are no global default tunnel set
       """
 
       assert capture_io(execution) == error_message

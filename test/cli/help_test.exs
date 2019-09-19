@@ -55,7 +55,7 @@ defmodule RitCLITest.CLI.HelpTest do
       end
 
       error_message = """
-      Error: Unknown context 'unknown'
+      \e[31mError\e[0m: Unknown context 'unknown'
       """
 
       assert capture_io(execution) == error_message <> @helper_message

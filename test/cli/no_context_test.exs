@@ -4,7 +4,7 @@ defmodule RitCLITest.CLI.NoContextTest do
   import ExUnit.CaptureIO
 
   @error_message """
-  Error: No context defined
+  \e[31mError\e[0m: No context defined
   """
 
   @helper_message """

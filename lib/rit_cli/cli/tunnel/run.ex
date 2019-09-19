@@ -9,7 +9,7 @@ defmodule RitCLI.CLI.Tunnel.Run do
     with {:ok, source_path} <- Manager.fetch_source(),
          {:ok, settings} <- Manager.extract_settings(source_path),
          :ok <- Manager.run(settings, operation, source_path) do
-      {:ok, %Output{message: "Tunnelling successfully performed"}}
+      {:ok, %Output{message: [s: "Tunnelling successfully performed"]}}
     end
   end
 end

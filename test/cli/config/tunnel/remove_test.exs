@@ -1,117 +1,49 @@
 defmodule RitCLITest.CLI.Config.Tunnel.RemoveTest do
-  use ExUnit.Case
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Remove
+  alias RitCLI.Config.TunnelStorage
 
-  alias RitCLI.CLI.Config.Tunnel
+  @argument_invalid_name "argument 'name' with value '42' must start and finish with a letter and must contain only letters and underscore"
+  @empty_argument "a name must be provided"
 
-  @helper_message """
-  usage: rit config tunnel remove <tunnel_name>
+  setup_all do
+    TunnelStorage.clear_storage()
+  end
 
-  Remove a tunnel from your configurations.
-
-  Argument:
-    <tunnel_name>    Name of the tunnel
-
-  """
-
-  describe "command: rit config tunnel remove" do
-    test "with no arguments, do: 'rit help config tunnel remove', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel remove)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel remove arguments: ''
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config tunnel remove'" do
-      execution = fn ->
-        argv = ~w(config tunnel remove help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "<tunnel_name>, do: remove tunnel from config" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel add local /root)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set root --path .)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel remove test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test' successfully removed
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "inexistent tunnel, do: explain not found, exit 1" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel remove test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel 'test' not found
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "invalid tunnel name, do: instruct correct tunnel name, exit 1" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel remove test2)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
-      """
-
-      assert capture_io(execution) == error_message
+  describe "[rit c t r | rit config tunnel remove]" do
+    test "show error and config tunnel remove helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel remove))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_argument, @empty_argument)
+      |> add_helper_output(Remove)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t r))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config tunnel r" do
-    test "with no arguments, do: 'rit help config tunnel remove', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel r)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c t r help | rit config tunnel remove help]" do
+    test "show config tunnel remove helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel remove help))
+      |> add_helper_output(Remove)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t r help))
+      |> cli_test()
+    end
+  end
 
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel remove arguments: ''
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
+  describe "[rit config tunnel remove <name>]" do
+    test "invalid name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel remove 42))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_name)
+      |> cli_test()
     end
   end
 end

@@ -1,64 +1,47 @@
 defmodule RitCLITest.CLI.Config.Tunnel.DefaultTest do
-  use ExUnit.Case, async: true
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Default
 
-  @error_message """
-  \e[31mError\e[0m: No config tunnel default operation defined
-  """
+  @empty_command "at least a default config tunnel command must be provided"
+  @invalid_command "the default config tunnel command 'unknown' is invalid"
 
-  @helper_message """
-  usage: rit config tunnel default <operation> [arguments]
-
-  Manage default tunnel configuration.
-
-  Available operations:
-    s, set      Set a tunnel as your default tunnel
-    u, unset    Unset a default tunnel from a path
-
-  """
-
-  describe "command: rit config tunnel default" do
-    test "with no arguments, do: 'rit help config tunnel default', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      assert capture_io(execution) == @error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config tunnel default'" do
-      execution = fn ->
-        argv = ~w(config tunnel default help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "with unknown argument, do: 'rit help config tunnel default', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default unknown)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel default operation 'unknown'
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
+  describe "[rit c t d | rit tunnel config default]" do
+    test "show error and config tunnel helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_command, @empty_command)
+      |> add_helper_output(Default)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config d" do
-    test "with no arguments, do: 'rit help config tunnel default', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel d)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c t d h | rit config tunnel default help]" do
+    test "show config tunnel default helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default help))
+      |> add_helper_output(Default)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d h))
+      |> cli_test()
+    end
+  end
 
-      assert capture_io(execution) == @error_message <> @helper_message
+  describe "[rit c t d ??? | rit config tunnel default ???]" do
+    test "command invalid, show error" do
+      setup_cli_test()
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_command, @invalid_command)
+      |> set_argv(~w(config tunnel default unknown))
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d unknown))
+      |> cli_test()
     end
   end
 end

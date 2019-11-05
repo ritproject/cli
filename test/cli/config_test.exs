@@ -1,65 +1,47 @@
 defmodule RitCLITest.CLI.ConfigTest do
-  use ExUnit.Case, async: true
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config
 
-  @error_message """
-  \e[31mError\e[0m: No config context defined
-  """
+  @empty_type "at least a config type must be provided"
+  @invalid_type "the config type 'unknown' is invalid"
 
-  @helper_message """
-  usage: rit config <context> [arguments]
-
-  Perform operations on your rit configuration files.
-
-  Available config contexts:
-    h, help               Guidance about rit config usage
-    s, server, servers    Manage your server integration configuration
-    t, tunnel, tunnels    Manage your tunnel configuration
-
-  """
-
-  describe "command: rit config" do
-    test "with no arguments, do: 'rit help config', exit 1" do
-      execution = fn ->
-        argv = ~w(config)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      assert capture_io(execution) == @error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config'" do
-      execution = fn ->
-        argv = ~w(config help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "with unknown argument, do: 'rit help config', exit 1" do
-      execution = fn ->
-        argv = ~w(config unknown)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config context 'unknown'
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
+  describe "[rit c | rit config]" do
+    test "show error and config helper" do
+      setup_cli_test()
+      |> set_argv(~w(config))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_type, @empty_type)
+      |> add_helper_output(Config)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c))
+      |> cli_test()
     end
   end
 
-  describe "command: rit c" do
-    test "with no arguments, do: 'rit help config', exit 1" do
-      execution = fn ->
-        argv = ~w(c)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c h | rit config help]" do
+    test "show config helper" do
+      setup_cli_test()
+      |> set_argv(~w(config help))
+      |> add_helper_output(Config)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c h))
+      |> cli_test()
+    end
+  end
 
-      assert capture_io(execution) == @error_message <> @helper_message
+  describe "[rit c ??? | rit config ???]" do
+    test "type invalid, show error" do
+      setup_cli_test()
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_type, @invalid_type)
+      |> set_argv(~w(config unknown))
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c unknown))
+      |> cli_test()
     end
   end
 end

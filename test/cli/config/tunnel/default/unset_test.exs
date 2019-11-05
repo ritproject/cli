@@ -1,121 +1,68 @@
 defmodule RitCLITest.CLI.Config.Tunnel.Default.UnsetTest do
-  use ExUnit.Case
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Default.Unset
+  alias RitCLI.Config.TunnelStorage
 
-  alias RitCLI.CLI.Config.Tunnel
+  @argument_invalid_path "argument 'path' with value '/unknown' must be a valid path"
+  @not_found "tunnel global default config does not exists"
+  @invalid_arguments "only valid --path option is allowed"
+  @tunnel_default_config_not_found "tunnel default config on path '/tmp' does not exists"
 
-  @helper_message """
-  usage: rit config tunnel default unset --path <path>
+  setup_all do
+    TunnelStorage.clear_storage()
+  end
 
-  Unset a default tunnel.
-
-  Option:
-    --path    Path where the default tunnel was set. If blank, unset global
-
-  """
-
-  describe "command: rit config tunnel default unset" do
-    test "with no arguments and global default set, do: unset global default" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel default unset)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Default global tunnel successfully unset
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "help, do: 'rit help config tunnel default unset'" do
-      execution = fn ->
-        argv = ~w(config tunnel default unset help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "--path <path>, do: unset default on path" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set test --path .)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel default unset --path .)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Default tunnel from '/app' path successfully unset
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "--path <unknown_path>, do: instruct correct path, exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default unset --path /unknown_folder)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: <path> argument with value '/unknown_folder' must be a valid path
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "with unknown argument, do: 'rit help config tunnel default unset', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default unset unknown)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel default unset arguments: 'unknown'
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
+  describe "[rit c t d u | rit config tunnel default unset]" do
+    test "show error and config tunnel default unset helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default unset))
+      |> set_exit_code(1)
+      |> add_error_output(:tunnel_default_config_not_found, @not_found)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d u))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config tunnel default u" do
-    test "with no arguments and no global default set, do: explain global not set" do
-      assert Tunnel.clear_config() == :ok
+  describe "[rit c t d u help | rit config tunnel default unset help]" do
+    test "show config tunnel default unset helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default unset help))
+      |> add_helper_output(Unset)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d u help))
+      |> cli_test()
+    end
+  end
 
-      execution = fn ->
-        argv = ~w(config tunnel default u)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit config tunnel default unset --path <path>]" do
+    test "invalid path, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default unset --path /unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_path)
+      |> cli_test()
+    end
 
-      error_message = """
-      \e[31mError\e[0m: There are no global default tunnel set
-      """
+    test "unknown config on path, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default unset --path /tmp))
+      |> set_exit_code(1)
+      |> add_error_output(:tunnel_default_config_not_found, @tunnel_default_config_not_found)
+      |> cli_test()
+    end
+  end
 
-      assert capture_io(execution) == error_message
+  describe "[rit config tunnel default unset ???]" do
+    test "unknown option, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default unset --unknown option))
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_arguments, @invalid_arguments)
+      |> cli_test()
     end
   end
 end

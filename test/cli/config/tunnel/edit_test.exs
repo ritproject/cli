@@ -1,158 +1,122 @@
 defmodule RitCLITest.CLI.Config.Tunnel.EditTest do
-  use ExUnit.Case
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Edit
+  alias RitCLI.Config.TunnelStorage
 
-  alias RitCLI.CLI.Config.Tunnel
+  @argument_invalid_repo_reference "argument 'reference' with value 'unknown' must be a valid hostname, with http or https prefix and no trailing slash"
+  @argument_invalid_current_name "argument 'current_name' with value '42' must start and finish with a letter and must contain only letters and underscore"
+  @argument_invalid_name "argument 'name' with value '42' must start and finish with a letter and must contain only letters and underscore"
+  @argument_invalid_from "argument 'from' with value 'unknown' must be 'local' or 'repo'"
+  @empty_arguments "at least current name argument must be provided"
+  @empty_options "at least one valid option must be provided"
+  @invalid_arguments "only valid current name and options must be provided"
+  @reference_without_from "in order to change 'reference', it is required to set 'from' argument"
+  @tunnel_config_not_found "tunnel config with name 'test' does not exists"
 
-  @helper_message """
-  usage: rit config tunnel edit <tunnel_current_name>
-                                --name <tunnel_name>
-                                --from <tunnel_from>
-                                --reference <tunnel_reference>
+  setup_all do
+    TunnelStorage.clear_storage()
+  end
 
-  Change the info of a tunnel in your configurations.
-
-  Argument:
-    <tunnel_name>    Name of the tunnel
-
-  Options (at least one must be defined):
-    --name           Update tunnel name
-    --from           Update tunnel origin source
-    --reference      Update tunnel reference
-
-  """
-
-  describe "command: rit config tunnel edit" do
-    test "with no arguments, do: 'rit help config tunnel edit', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel edit)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel edit arguments: ''
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "with unknown option, do: 'rit help config tunnel edit', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel edit test --unknown option)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel edit arguments: 'test --unknown option'
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config tunnel edit'" do
-      execution = fn ->
-        argv = ~w(config tunnel edit help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "<tunnel_name> --name <name>, do: edit a tunnel name" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set test)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel add repo http://github.com/test_two)
-        assert RitCLI.main(argv) == :ok
-
-        argv = ~w(config tunnel default set test_two --path .)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel edit test --name test_modified)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test_modified' (previously named 'test') successfully updated
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "<tunnel_name> --from <from> --reference <reference>, do: edit a tunnel from and reference" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/root)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel edit root --from local --reference /root)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'root' successfully updated
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "<tunnel_name>, do: explain about options restriction, exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel edit test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: expects at least one of the optional inputs: <from>, <name>, <reference>
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "<inexistent_tunnel_name> --name <name>, do: inform not found, exit 1" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel edit test --name test_modified)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel 'test' not found
-      """
-
-      assert capture_io(execution) == error_message
+  describe "[rit c t e | rit config tunnel edit]" do
+    test "show error and config tunnel edit helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_arguments, @empty_arguments)
+      |> add_helper_output(Edit)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t e))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config tunnel e" do
-    test "with no arguments, do: 'rit help config tunnel edit', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel e)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c t e help | rit config tunnel edit help]" do
+    test "show config tunnel edit helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit help))
+      |> add_helper_output(Edit)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t e help))
+      |> cli_test()
+    end
+  end
 
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel edit arguments: ''
-      """
+  describe "[rit config tunnel edit <name>]" do
+    test "invalid name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit 42))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_current_name)
+      |> cli_test()
+    end
 
-      assert capture_io(execution) == error_message <> @helper_message
+    test "only name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_options, @empty_options)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel edit <name> --from <from>]" do
+    test "invalid from, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --from unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_from)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel edit <current_name> --name <name>]" do
+    test "invalid name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --name 42))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_name)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel edit <current_name> --reference <reference>]" do
+    test "show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --reference unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @reference_without_from)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel edit <current_name> --from from --reference <reference>]" do
+    test "invalid reference, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --from repo --reference unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_repo_reference)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel edit ???]" do
+    test "invalid option, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --unknown unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_arguments, @invalid_arguments)
+      |> cli_test()
+    end
+
+    test "unknown config, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel edit test --name test_invalid))
+      |> set_exit_code(1)
+      |> add_error_output(:tunnel_config_not_found, @tunnel_config_not_found)
+      |> cli_test()
     end
   end
 end

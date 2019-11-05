@@ -24,3 +24,6 @@ rit-*.tar
 
 # VSCode devcontainer
 .devcontainer*
+
+# VSCode extension ElixirLS
+.elixir_ls

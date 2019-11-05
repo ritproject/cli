@@ -1,146 +1,69 @@
 defmodule RitCLITest.CLI.Config.Tunnel.Default.SetTest do
-  use ExUnit.Case
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Default.Set
+  alias RitCLI.Config.TunnelStorage
 
-  alias RitCLI.CLI.Config.Tunnel
+  @argument_invalid_name "argument 'name' with value '42' must start and finish with a letter and must contain only letters and underscore"
+  @empty_arguments "at least name must be provided"
+  @invalid_arguments "at least a valid name must be provided"
+  @tunnel_config_not_found "tunnel config with name 'unknown' does not exists"
 
-  @helper_message """
-  usage: rit config tunnel default set <tunnel_name>
-                                       --path <path>
+  setup_all do
+    TunnelStorage.clear_storage()
+  end
 
-  Set a tunnel as your default tunnel.
-
-  Arguments:
-    <tunnel_name>    Name of the tunnel
-
-  Option:
-    --path    Path where the default tunnel will be set. If blank, the tunnel
-              will be interpreted as global default
-
-  """
-
-  describe "command: rit config tunnel default set" do
-    test "with no arguments, do: 'rit help config tunnel default set', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default set)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel default set arguments: ''
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config tunnel default set'" do
-      execution = fn ->
-        argv = ~w(config tunnel default set help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "<tunnel_name>, do: set tunnel as global default" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel default set test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test' successfully set as default
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "<tunnel_name> --path <path>, do: set tunnel as path default" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://github.com/test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(config tunnel default set test --path .)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test' successfully set as default
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "inexistent tunnel, do: explain not found, exit 1" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel default set test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel 'test' not found
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "invalid tunnel name, do: instruct correct tunnel name, exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default set test2)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: <name> argument with value 'test2' must start and finish with a letter and must contain only letters and underscore
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "<tunnel_name> --path <unknown_path>, do: instruct correct path, exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default set test --path /unknown_folder)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: <path> argument with value '/unknown_folder' must be a valid path
-      """
-
-      assert capture_io(execution) == error_message
+  describe "[rit c t d s | rit config tunnel default set]" do
+    test "show error and config tunnel default set helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default set))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_arguments, @empty_arguments)
+      |> add_helper_output(Set)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d s))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config tunnel default s" do
-    test "with no arguments, do: 'rit help config tunnel default set', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel default s)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c t d s help | rit config tunnel default set help]" do
+    test "show config tunnel default set helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default set help))
+      |> add_helper_output(Set)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t d s help))
+      |> cli_test()
+    end
+  end
 
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel default set arguments: ''
-      """
+  describe "[rit config tunnel default set <name>]" do
+    test "invalid name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default set 42))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_name)
+      |> cli_test()
+    end
 
-      assert capture_io(execution) == error_message <> @helper_message
+    test "unknown config, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default set unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:tunnel_config_not_found, @tunnel_config_not_found)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel default set ???]" do
+    test "unknown option, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel default set test --unknown option))
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_arguments, @invalid_arguments)
+      |> cli_test()
     end
   end
 end

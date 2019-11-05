@@ -1,161 +1,94 @@
 defmodule RitCLITest.CLI.Config.Tunnel.AddTest do
-  use ExUnit.Case
+  use RitCLITest.CLIUtils, async: true
 
-  import ExUnit.CaptureIO
+  alias RitCLI.Config.Tunnel.Add
+  alias RitCLI.Config.TunnelStorage
 
-  alias RitCLI.CLI.Config.Tunnel
+  @link "http://#{String.duplicate("a", 150)}.com/unknown"
 
-  @helper_message """
-  usage: rit config tunnel add <tunnel_from>
-                               <tunnel_reference>
-                               --name <tunnel_name>
+  @argument_invalid_local_reference "argument 'reference' with value '/unknown' must be a valid path"
+  @argument_invalid_repo_reference "argument 'reference' with value '#{@link}' must have at most 150 characters"
+  @argument_invalid_name "argument 'name' with value 'x' must have at least 2 and at most 20 characters"
+  @argument_invalid_from "argument 'from' with value 'unknown' must be 'local' or 'repo'"
+  @empty_arguments "at least from and reference arguments must be provided"
 
-  Add a new tunnel to your configurations.
+  setup_all do
+    TunnelStorage.clear_storage()
+  end
 
-  Arguments:
-    <tunnel_from>         Origin of the tunnel source
-                          Options:
-                            repo:  From a git remote repository
-                                   Reference must be an URL
-                            local: From a local directory
-                                   Reference must be a valid path
-    <tunnel_reference>    A valid reference for the source
-
-  Option:
-    --name                A name for the new tunnel, defaults to the last
-                          segment of <tunnel_reference>
-
-  """
-
-  describe "command: rit config tunnel add" do
-    test "with no arguments, do: 'rit help config tunnel add', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel add)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel add arguments: ''
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "help, do: 'rit help config tunnel add'" do
-      execution = fn ->
-        argv = ~w(config tunnel add help)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      assert capture_io(execution) == @helper_message
-    end
-
-    test "repo <tunnel_reference>, do: add tunnel to config" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add repo http://github.com/test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test' successfully added
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "local <tunnel_reference>, do: add tunnel to config" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add local /root)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'root' successfully added
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "<tunnel_from> <tunnel_reference> --name <tunnel_name>, do: add tunnel to config" do
-      assert Tunnel.clear_config() == :ok
-
-      execution = fn ->
-        argv = ~w(config tunnel add local / --name test)
-        assert RitCLI.main(argv) == :ok
-      end
-
-      message = """
-      Tunnel 'test' successfully added
-      """
-
-      assert capture_io(execution) == message
-    end
-
-    test "<tunnel_from>, do: 'rit help config tunnel add', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel add repo)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel add arguments: 'repo'
-      """
-
-      assert capture_io(execution) == error_message <> @helper_message
-    end
-
-    test "<unknown_tunnel_from> <tunnel_reference>, do: instruct correct <tunnel_from>, exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel add from https://github.com/test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: <from> argument with value 'from' must be 'local' or 'repo'
-      """
-
-      assert capture_io(execution) == error_message
-    end
-
-    test "duplicated tunnel, do: explain uniqueness, exit 1" do
-      assert Tunnel.clear_config() == :ok
-
-      argv = ~w(config tunnel add repo https://github.com/test)
-
-      execution = fn ->
-        assert RitCLI.main(argv) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel 'test' already exists
-      """
-
-      assert capture_io(execution) == error_message
+  describe "[rit c t a | rit config tunnel add]" do
+    test "show error and config tunnel add helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add))
+      |> set_exit_code(1)
+      |> add_error_output(:empty_arguments, @empty_arguments)
+      |> add_helper_output(Add)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t a))
+      |> cli_test()
     end
   end
 
-  describe "command: rit config tunnel a" do
-    test "with no arguments, do: 'rit help config tunnel add', exit 1" do
-      execution = fn ->
-        argv = ~w(config tunnel a)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+  describe "[rit c t a help | rit config tunnel add help]" do
+    test "show config tunnel add helper" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add help))
+      |> add_helper_output(Add)
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(c t a help))
+      |> cli_test()
+    end
+  end
 
-      error_message = """
-      \e[31mError\e[0m: Unknown config tunnel add arguments: ''
-      """
+  describe "[rit config tunnel add <from>]" do
+    test "invalid from, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:invalid_arguments, @empty_arguments)
+      |> cli_test()
+    end
+  end
 
-      assert capture_io(execution) == error_message <> @helper_message
+  describe "[rit config tunnel add <from> <reference>]" do
+    test "invalid from, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add unknown /tmp))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_from)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel add local <reference>]" do
+    test "invalid reference, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add local /unknown))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_local_reference)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel add repo <reference>]" do
+    test "invalid reference, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add repo #{@link}))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_repo_reference)
+      |> cli_test()
+    end
+  end
+
+  describe "[rit config tunnel add local <reference> --name <name>]" do
+    test "invalid name, show error" do
+      setup_cli_test()
+      |> set_argv(~w(config tunnel add local /tmp --name x))
+      |> set_exit_code(1)
+      |> add_error_output(:argument_invalid, @argument_invalid_name)
+      |> cli_test()
     end
   end
 end

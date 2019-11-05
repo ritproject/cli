@@ -1,662 +1,240 @@
 defmodule RitCLITest.CLI.Tunnel.RunTest do
-  use ExUnit.Case, async: false
+  use RitCLITest.CLIUtils
 
-  alias RitCLI.CLI.Config
+  alias RitCLI.Config.TunnelStorage
+  alias RitCLI.Tunnel.Run
+  alias RitCLITest.TunnelSettings
 
-  import ExUnit.CaptureIO
+  @command_failed "command 'cat' with arguments 'unknown.txt' failed with code '1'"
+  @command_failed_map %{
+    data: "\n/bin/cat: unknown.txt: No such file or directory\n",
+    error: %{
+      exit_code: 1,
+      id: :command_failed,
+      message: @command_failed,
+      message_raw:
+        "command '%{command}' with arguments '%{arguments}' failed with code '%{code}'",
+      metadata: %{
+        arguments: "unknown.txt",
+        code: 1,
+        command: "cat"
+      },
+      where: Run
+    }
+  }
 
-  describe "command: rit tunnel run" do
-    test "with valid settings and operations, do: run command successfully" do
-      assert Config.Tunnel.clear_config() == :ok
+  @invalid_input_settings "input setting default not found"
+  @invalid_settings "run key on referenced settings does not exists"
+  @link_failed "OS failed to link target path with source"
+  @settings_not_found "referenced settings file on source directory does not exists"
+  @undefined_link_dir "link_dir must be set if link_mode is not 'none'"
+  @unknown_operation "operation to perform not found on settings file"
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test/test")
+  setup_all do
+    TunnelStorage.clear_storage()
+    TunnelSettings.reset()
 
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-
-          .error:
-            run: cat unknown.txt
-
-            .test: echo test
-
-          .test:
-            redirect:
-              to: test
-              external: true
-        """
-
-        File.write!("/test/test/tunnel.yml", yaml)
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-
-          .a:
-            direct: echo a
-
-            .b: echo b
-
-          .c:
-            environment:
-              TEST: test
-            run:
-              - echo c
-              - echo c2
-
-          .d:
-            run: echo d
-
-            .e:
-              run:
-                - echo e
-                - echo e2
-
-            .f: echo f
-
-            .g:
-              redirect:
-                to: d e
-                strict: true
-        """
-
-        File.write!("/test/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run test)
-        assert RitCLI.main(argv ++ ~w(a b)) == :ok
-        assert RitCLI.main(argv ++ ~w(c)) == :ok
-        assert RitCLI.main(argv ++ ~w(d g)) == :ok
-        assert catch_exit(RitCLI.main(~w(tunnel run error test))) == {:shutdown, 1}
-      end
-
-      message = """
-      b
-      \e[32mTunnelling successfully performed\e[0m
-      c
-      c2
-      \e[32mTunnelling successfully performed\e[0m
-      d
-      e
-      e2
-      \e[32mTunnelling successfully performed\e[0m
-      /bin/cat: unknown.txt: No such file or directory
-      \e[31mError\e[0m: Tunnel operation 'cat unknown.txt' failed, exit code: 1
-
-      """
-
-      assert capture_io(execution) == message
-
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test/test/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          redirect:
-            to: test
-            external: true
-        """
-
-        File.write!("/test/test/tunnel.yml", yaml)
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          .a:
-            .b:
-              redirect:
-                to: test
-                external: true
-        """
-
-        File.write!("/test/test/test/tunnel.yml", yaml)
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-          .test: echo test
-        """
-
-        File.write!("/test/test/test/test/tunnel.yml", yaml)
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        assert RitCLI.main(~w(tunnel run a b test)) == :ok
-      end
-
-      message = """
-      test
-      \e[32mTunnelling successfully performed\e[0m
-      """
-
-      assert capture_io(execution) == message
+    operation = fn ->
+      RitCLI.main(~w(config tunnel add local /test))
+      RitCLI.main(~w(config tunnel default set test))
     end
 
-    test "without default tunnel set, do: explain not set" do
-      assert Config.Tunnel.clear_config() == :ok
+    capture_io(operation)
 
-      execution = fn ->
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
+    on_exit(fn ->
+      TunnelStorage.clear_storage()
+      TunnelSettings.clear()
+    end)
+  end
 
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to find default config
+  setup do
+    on_exit(fn -> TunnelSettings.reset() end)
+  end
 
-      """
+  describe "(successful) [rit tunnel run ???]" do
+    test ":run" do
+      TunnelSettings.set(:run)
 
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with default set with corrupted config, do: explain undefined" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":redirect_internal" do
+      TunnelSettings.set(:redirect_internal)
 
-      data =
-        %{
-          tunnels: %{},
-          defaults: %{*: "test"}
-        }
-        |> Jason.encode!()
-
-      File.mkdir_p("/root/.rit/config")
-      File.write("/root/.rit/config/tunnel.json", data)
-
-      execution = fn ->
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to find config with name 'test'
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run hello redirect))
+      |> add_output("hello\nworld")
+      |> cli_test()
     end
 
-    test "with local default set with inexistent dir, do: explain undefined" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":redirect_external" do
+      TunnelSettings.set(:redirect_external)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test")
-        assert RitCLI.main(~w(config tunnel add local /test)) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-        File.rmdir("/test")
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel local reference 'test' on path '/test' does not exist
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run hello redirect))
+      |> add_output("hello\nworld")
+      |> cli_test()
     end
 
-    test "with repo default set with invalid link, do: explain fetch failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":redirect_external_internal" do
+      TunnelSettings.set(:redirect_external_internal)
 
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://gitlab.com/ritproject/unknown --name test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run hello redirect))
+      |> add_output("hello\nworld")
+      |> cli_test()
     end
 
-    test "with repo default set with local set without git, do: explain fetch failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":redirect_strict" do
+      TunnelSettings.set(:redirect_strict)
 
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://gitlab.com/ritproject/unknown --name test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        File.mkdir_p("/root/.rit/tunnel/test")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to fetch data from repo 'test' with link 'https://gitlab.com/ritproject/unknown'
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with repo default set and no settings set, do: explain not found" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":input" do
+      TunnelSettings.set(:input)
 
-      execution = fn ->
-        argv = ~w(config tunnel add repo https://gitlab.com/ritproject/cli --name test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed find tunnel YAML file
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_input("hello world")
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with invalid .yaml set, do: explain invalid" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":input_with_default" do
+      TunnelSettings.set(:input_with_default)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test")
-        File.write("/test/tunnel.yaml", "!!! INVALID")
-
-        argv = ~w(config tunnel add local /test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to parse YAML file
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_input("")
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with no root run on .yml set, do: explain undefined" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":input_with_default and input disabled" do
+      TunnelSettings.set(:input_with_default)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test")
-
-        yaml = """
-        version: '0.0.1'
-        """
-
-        File.write("/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to identify run on settings
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel --input disabled run))
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with no run operation on .yml set, do: explain undefined" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":link_mode_symlink" do
+      TunnelSettings.set(:link_mode_symlink)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-          environment:
-            TEST: test
-        """
-
-        File.write("/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to identify operation to perform on settings
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel --path /test_target run))
+      |> add_output("hello world")
+      |> cli_test()
     end
 
-    test "with invalid link_dir set, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":link_mode_copy" do
+      TunnelSettings.set(:link_mode_copy)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
+      setup_cli_test()
+      |> set_argv(~w(tunnel --path /test_target run))
+      |> add_output("hello world")
+      |> cli_test()
+    end
+  end
 
-        yaml = """
-        version: '0.0.1'
+  describe "(failed) [rit tunnel run ???]" do
+    test ":redirect_external_no_child" do
+      TunnelSettings.set(:redirect_external_no_child)
 
-        run:
-          link_mode: symlink
-          link_dir: unknown/directory/path
-
-          .test:
-            redirect:
-              to: echo
-
-          .echo: echo TEST
-        """
-
-        File.write("/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to link directory
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run hello redirect))
+      |> add_error_output(:settings_not_found, @settings_not_found)
+      |> set_exit_code(1)
+      |> cli_test()
     end
 
-    test "with no link_dir set, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":input without default and empty input" do
+      TunnelSettings.set(:input)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          direct:
-            - echo TEST
-            - echo AS A LIST
-        """
-
-        File.write("/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to identify 'link_dir' on settings
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_input("")
+      |> add_error_output(:invalid_input_settings, @invalid_input_settings)
+      |> set_exit_code(1)
+      |> cli_test()
     end
 
-    test "with invalid operation set, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":input without default and input disabled" do
+      TunnelSettings.set(:input)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-          direct: unknown command
-        """
-
-        File.write("/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel operation 'unknown command' failed, exit code: 1
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel --input disabled run))
+      |> add_error_output(:invalid_input_settings, @invalid_input_settings)
+      |> set_exit_code(1)
+      |> cli_test()
     end
 
-    test "with invalid final argument, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":link_mode_without_link_dir" do
+      TunnelSettings.set(:link_mode_without_link_dir)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_mode: copy
-          link_dir: link
-
-          .test:
-            run: echo TEST
-        """
-
-        File.write("/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run test unknown)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed to identify operation to perform on settings
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_error_output(:undefined_link_dir, @undefined_link_dir)
+      |> set_exit_code(1)
+      |> cli_test()
     end
 
-    test "with error on list operations, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":link_dir_invalid" do
+      TunnelSettings.set(:link_dir_invalid)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
-
-        yaml = """
-        version: '0.0.1'
-
-        run:
-          link_dir: link
-
-          .test:
-            environment:
-              VALID: hello
-
-            run: echo TEST
-
-            .list:
-              - echo $TEST
-              - echo $VALID
-              - unknown command
-              - echo TEST
-        """
-
-        File.write("/test/test/tunnel.yml", yaml)
-
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run test list unknown)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel operation 'unknown command' failed, exit code: 1
-
-      """
-
-      assert capture_io(execution) =~ error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel --path /test_target run))
+      |> add_error_output(:link_failed, @link_failed)
+      |> set_exit_code(1)
+      |> cli_test()
     end
 
-    test "with unknown redirection, do: explain failure" do
-      assert Config.Tunnel.clear_config() == :ok
+    test ":no_operation" do
+      TunnelSettings.set(:no_operation)
 
-      execution = fn ->
-        File.rm_rf("/test")
-        File.mkdir_p("/test/test")
+      setup_cli_test()
+      |> set_argv(~w(tunnel run no operation))
+      |> add_error_output(:unknown_operation, @unknown_operation)
+      |> set_exit_code(1)
+      |> cli_test()
+    end
 
-        yaml = """
-        version: '0.0.1'
+    test ":fail_on_joined_run" do
+      TunnelSettings.set(:fail_on_joined_run)
 
-        run:
-          link_dir: link
+      setup_cli_test()
+      |> set_argv(~w(tunnel run success fail success))
+      |> add_error_output(:command_failed, @command_failed)
+      |> set_exit_code(1)
+      |> cli_test()
+    end
 
-          .test:
-            redirect:
-              to: redirect
-              strict: true
+    test ":fail_on_joined_run with ugly_json output mode" do
+      TunnelSettings.set(:fail_on_joined_run)
 
-          .redirect:
-            redirect:
-              to: unknown
-              external: true
-        """
+      setup_cli_test()
+      |> set_argv(~w(--output ugly_json tunnel run success fail success))
+      |> add_output(Jason.encode!(@command_failed_map))
+      |> set_exit_code(1)
+      |> cli_test()
+    end
 
-        File.write("/test/test/tunnel.yml", yaml)
+    test ":run_not_found" do
+      TunnelSettings.set(:run_not_found)
 
-        argv = ~w(config tunnel add local /test/test)
-        assert RitCLI.main(argv) == :ok
-        assert RitCLI.main(~w(config tunnel default set test)) == :ok
-      end
-
-      capture_io(execution)
-
-      execution = fn ->
-        File.rm_rf("/root/.rit/tunnel")
-        argv = ~w(tunnel run test)
-        assert catch_exit(RitCLI.main(argv)) == {:shutdown, 1}
-      end
-
-      error_message = """
-      \e[31mError\e[0m: Tunnel failed find tunnel YAML file
-
-      """
-
-      assert capture_io(execution) == error_message
+      setup_cli_test()
+      |> set_argv(~w(tunnel run))
+      |> add_error_output(:invalid_settings, @invalid_settings)
+      |> set_exit_code(1)
+      |> cli_test()
     end
   end
 end

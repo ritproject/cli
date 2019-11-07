@@ -10,9 +10,9 @@ stages:
 test:
   stage: test
   before_script:
-    - rit config tunnel add repo https://gitlab.com/ritproject/workspace
-    - rit config tunnel default set workspace
-  script: rit tunnel run cli test
+    - rit --log on_error config tunnel add repo https://gitlab.com/ritproject/workspace
+    - rit --log on_error config tunnel default set workspace
+  script: rit --log on_error tunnel --input disabled run cli test recursive
   tags:
     - docker
 
@@ -22,8 +22,8 @@ test:
   stage: update images
   before_script:
     - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
-    - rit config tunnel add repo https://gitlab.com/ritproject/workspace
-    - rit config tunnel default set workspace
+    - rit --log on_error config tunnel add repo https://gitlab.com/ritproject/workspace
+    - rit --log on_error config tunnel default set workspace
   only:
     - /^master$/
   tags:
@@ -31,16 +31,16 @@ test:
 
 update development image:
   <<: *update_image
-  script: rit tunnel run cli update development
+  script: rit --log on_error tunnel --input disabled run cli update development
 
 update test image:
   <<: *update_image
-  script: rit tunnel run cli update test
+  script: rit --log on_error tunnel --input disabled run cli update test
 
 update docker image:
   <<: *update_image
-  script: rit tunnel run cli update docker
+  script: rit --log on_error tunnel --input disabled run cli update docker
 
 update production image:
   <<: *update_image
-  script: rit tunnel run cli update production
+  script: rit --log on_error tunnel --input disabled run cli update production

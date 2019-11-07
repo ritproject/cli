@@ -17,6 +17,7 @@ defmodule RitCLI.Main.ContextHandler do
       :config -> Config.handle_arguments(meta)
       :help -> {:ok, Meta.help(meta)}
       :tunnel -> Tunnel.handle_arguments(meta)
+      :version -> {:ok, Meta.version(meta)}
     end
   end
 

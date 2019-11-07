@@ -1,7 +1,7 @@
 defmodule RitCLI.MixProject do
   use Mix.Project
 
-  @version "0.0.1"
+  @version "0.0.2"
   @source_url "https://gitlab.com/ritproject/cli"
 
   def project do
@@ -78,8 +78,8 @@ defmodule RitCLI.MixProject do
     [
       coveralls: :test,
       "coveralls.detail": :test,
-      "coveralls.post": :test,
       "coveralls.html": :test,
+      "coveralls.post": :test,
       "test.all": :test,
       "test.coverage": :test,
       "test.static": :test

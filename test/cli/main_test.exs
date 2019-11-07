@@ -1,7 +1,7 @@
 defmodule RitCLITest.CLI.MainTest do
   use RitCLITest.CLIUtils, async: true
 
-  alias RitCLI.Main
+  alias RitCLI.{Git, Main}
 
   @empty_argument "at least a context must be provided"
   @empty_log_modifier "log mode must be provided"
@@ -29,6 +29,29 @@ defmodule RitCLITest.CLI.MainTest do
       |> cli_test()
       # Collapsed
       |> set_argv(~w(h))
+      |> cli_test()
+    end
+
+    test "show main helper, parsed" do
+      operation = fn ->
+        assert RitCLI.parse_and_exec("help") == :ok
+      end
+
+      assert capture_io(operation) == helper_output(Main) <> "\n"
+    end
+  end
+
+  describe "[rit v | rit version]" do
+    test "show rit version" do
+      version = Keyword.get(Mix.Project.config(), :version)
+      commit = ~w(rev-parse --short HEAD) |> Git.run() |> elem(1) |> String.trim_trailing("\n")
+
+      setup_cli_test()
+      |> set_argv(~w(version))
+      |> add_success_output("rit v#{version} (#{commit})")
+      |> cli_test()
+      # Collapsed
+      |> set_argv(~w(v))
       |> cli_test()
     end
 

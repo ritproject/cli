@@ -76,8 +76,12 @@ defmodule RitCLI.Tunnel.List.Lister do
     path = Path.expand(to, lister.source_path)
 
     case SettingsManager.extract(meta, path) do
-      {:ok, settings} -> parse_redirect_and_follow_args(meta, lister, settings, args, arg)
-      error -> error
+      {:ok, settings} ->
+        lister = struct(lister, source_path: path)
+        parse_redirect_and_follow_args(meta, lister, settings, args, arg)
+
+      error ->
+        error
     end
   end
 
@@ -121,23 +125,30 @@ defmodule RitCLI.Tunnel.List.Lister do
 
   defp map_arg_and_continue(meta, %{current_depth: current, depth: depth} = lister, arg, keys) do
     if depth == :infinity or current < depth do
-      do_map_arg_and_continue(meta, struct(lister, current_depth: current + 1), arg, keys)
+      do_map_arg_and_continue(meta, lister, arg, keys)
     else
       map_keys(meta, lister, keys)
     end
   end
 
-  defp do_map_arg_and_continue(meta, %{settings: settings, path: path} = lister, arg, keys) do
+  defp do_map_arg_and_continue(meta, lister, arg, keys) do
+    %{current_depth: current_depth, settings: settings, path: path} = lister
+
     lister =
       struct(
         lister,
+        current_depth: current_depth + 1,
         path: path ++ [arg],
-        settings: Map.get(lister.settings, ".#{arg}")
+        settings: Map.get(settings, ".#{arg}")
       )
 
     case do_map_commands(meta, lister) do
-      {:ok, meta, lister} -> map_keys(meta, struct(lister, path: path, settings: settings), keys)
-      error -> error
+      {:ok, meta, lister} ->
+        lister = struct(lister, current_depth: current_depth, path: path, settings: settings)
+        map_keys(meta, lister, keys)
+
+      error ->
+        error
     end
   end
 
@@ -149,7 +160,7 @@ defmodule RitCLI.Tunnel.List.Lister do
     lister = map_command(lister, :redirect)
 
     case Map.get(lister.settings, "redirect", %{}) do
-      %{"to" => to, "external" => true} -> fetch_external_and_continue(meta, lister, to)
+      %{"to" => to, "external" => true} -> fetch_external_and_continue(meta, lister, to, keys)
       _redirect -> map_keys(meta, lister, keys)
     end
   end
@@ -177,19 +188,31 @@ defmodule RitCLI.Tunnel.List.Lister do
     Map.put(commands, operation_key, true)
   end
 
-  defp fetch_external_and_continue(meta, lister, to) do
+  defp fetch_external_and_continue(meta, lister, to, keys) do
     path = Path.expand(to, lister.source_path)
 
     case SettingsManager.extract(meta, path) do
-      {:ok, settings} -> parse_run_and_continue(meta, struct(lister, source_path: path), settings)
+      {:ok, settings} -> parse_run_and_continue(meta, lister, settings, path, keys)
       error -> error
     end
   end
 
-  defp parse_run_and_continue(meta, lister, settings) do
+  defp parse_run_and_continue(meta, lister, settings, path, keys) do
     case RunParser.parse(settings) do
-      {:ok, settings} -> do_map_commands(meta, struct(lister, settings: settings))
+      {:ok, settings} -> run_and_continue(meta, lister, settings, path, keys)
       {:error, error} -> {:error, run_key_not_found(meta, error)}
+    end
+  end
+
+  defp run_and_continue(meta, lister, settings, path, keys) do
+    %{settings: current_settings, source_path: source_path} = lister
+
+    case do_map_commands(meta, struct(lister, settings: settings, source_path: path)) do
+      {:ok, meta, lister} ->
+        map_keys(meta, struct(lister, settings: current_settings, source_path: source_path), keys)
+
+      error ->
+        error
     end
   end
 

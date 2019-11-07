@@ -276,6 +276,16 @@ defmodule RitCLITest.CLI.Tunnel.ListTest do
       |> cli_test()
     end
 
+    test ":redirect_external_no_child_depth_three" do
+      TunnelSettings.set(:redirect_external_no_child_depth_three)
+
+      setup_cli_test()
+      |> set_argv(~w(tunnel list))
+      |> add_error_output(:settings_not_found, @settings_not_found)
+      |> set_exit_code(1)
+      |> cli_test()
+    end
+
     test ":invalid_argument with filter" do
       TunnelSettings.set(:invalid_argument)
 

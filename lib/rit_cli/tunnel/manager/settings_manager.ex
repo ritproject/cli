@@ -25,7 +25,7 @@ defmodule RitCLI.Tunnel.SettingsManager do
       if File.exists?(file_path) do
         {:ok, file_path}
       else
-        {:error, file_not_found_error()}
+        {:error, file_not_found_error(path)}
       end
     end
   end
@@ -37,11 +37,12 @@ defmodule RitCLI.Tunnel.SettingsManager do
     _error -> {:error, invalid_file_error()}
   end
 
-  defp file_not_found_error do
+  defp file_not_found_error(path) do
     Error.build(
       __MODULE__,
       :settings_not_found,
-      "referenced settings file on source directory does not exists"
+      "referenced settings file on source directory does not exists",
+      path: path
     )
   end
 

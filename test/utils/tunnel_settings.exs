@@ -77,6 +77,11 @@ defmodule RitCLITest.TunnelSettings do
     write(@redirect_external_parent, 1)
   end
 
+  def set(:redirect_external_no_child_depth_three) do
+    write(@redirect_external_parent, 1)
+    write(@redirect_external_parent, 2)
+  end
+
   @redirect_external_internal_parent """
   version: '0.0.1'
 

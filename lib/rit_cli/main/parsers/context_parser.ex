@@ -3,7 +3,7 @@ defmodule RitCLI.Main.ContextParser do
 
   alias RitCLI.Meta.Error
 
-  @type context :: :config | :help | :tunnel
+  @type context :: :config | :help | :tunnel | :version
 
   @valid_contexts %{
     "c" => :config,
@@ -11,7 +11,9 @@ defmodule RitCLI.Main.ContextParser do
     "h" => :help,
     "help" => :help,
     "t" => :tunnel,
-    "tunnel" => :tunnel
+    "tunnel" => :tunnel,
+    "v" => :version,
+    "version" => :version
   }
 
   @spec parse(String.t()) :: {:ok, context} | {:error, Error.t()}

@@ -1,8 +1,11 @@
 defmodule RitCLI.Meta do
   @moduledoc false
 
-  alias RitCLI.{Main, Meta, Tunnel}
+  alias RitCLI.{Git, Main, Meta, Tunnel}
   alias RitCLI.Meta.{Arguments, Error, Helper, Logs, Output}
+
+  @version Keyword.get(Mix.Project.config(), :version)
+  @commit ~w(rev-parse --short HEAD) |> Git.run() |> elem(1) |> String.trim_trailing("\n")
 
   @type t :: %Meta{
           args: Arguments.t(),
@@ -133,6 +136,13 @@ defmodule RitCLI.Meta do
     meta
     |> struct(tunnel: struct(meta.tunnel, data))
     |> log_each(meta.tunnel, :success, data)
+  end
+
+  @spec version(Meta.t()) :: Meta.t()
+  def version(%Meta{} = meta) do
+    meta
+    |> set_output_data(%{version: @version, commit: @commit})
+    |> success("rit v%{version} (%{commit})", version: @version, commit: @commit)
   end
 
   defp log_each(meta, map, level, data) do

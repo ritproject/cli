@@ -17,7 +17,7 @@ defmodule RitCLI.Tunnel.Run.Runner do
           input_mode: atom,
           link_dir: String.t(),
           link_mode: atom,
-          operation: list(String.t()) | String.t() | nil,
+          operation: map | list(String.t()) | String.t() | nil,
           operation_cache: map | nil,
           operation_mode: atom,
           prefixes: list(String.t()),
@@ -61,7 +61,7 @@ defmodule RitCLI.Tunnel.Run.Runner do
     runner = %Runner{
       input_mode: tunnel.input_mode,
       source_path: source_path,
-      target_path: tunnel.path,
+      target_path: tunnel.path || Path.expand("."),
       root_args: args,
       root_settings: root_settings
     }

@@ -10,7 +10,7 @@ it is possible by adding as dependency in your `mix.exs` file:
 
 ```elixir
 def deps do
-  [{:rit_cli, "~> 0.0.1"}]
+  [{:rit_cli, "~> 0.0.2"}]
 end
 ```
 

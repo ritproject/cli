@@ -13,7 +13,11 @@ defmodule RitCLI.Tunnel.Run.Handler.Execute.Redirector do
       if runner.strict? do
         runner
       else
-        struct(runner, strict?: Map.get(redirect, "strict", false))
+        if Map.get(redirect, "strict", false) do
+          struct(runner, strict?: true)
+        else
+          struct(runner, strict?: false)
+        end
       end
 
     to = Map.get(redirect, "to")

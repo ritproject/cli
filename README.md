@@ -1,6 +1,6 @@
 # Rit CLI
 
-[![pipeline status](https://gitlab.com/ritproject/cli/badges/master/build.svg)](https://gitlab.com/ritproject/cli/commits/master)
+[![pipeline status](https://gitlab.com/ritproject/cli/badges/master/pipeline.svg)](https://gitlab.com/ritproject/cli/commits/master)
 [![coverage report](https://gitlab.com/ritproject/cli/badges/master/coverage.svg)](https://gitlab.com/ritproject/cli/commits/master)
 
 Command line tools to aid developers on daily work.
